@@ -181,6 +181,10 @@ jobs:
             echo "Wrote $MANIFEST_DIR/AndroidManifest.xml"
           done
 
+          # Remove any lingering <uses-sdk ...> lines from manifests (robust removal)
+          echo "Removing any <uses-sdk> lines from AndroidManifest.xml files"
+          find android/app/src -type f -name AndroidManifest.xml -print0 | xargs -0 sed -i '/<uses-sdk/Id' || true
+
           # Final check: ensure at least one minSdk mention exists in app gradles
           if ! (grep -R "minSdkVersion" android/app || grep -R "minSdk =" android/app); then
             echo "No minSdk found in app gradles; inserting into build.gradle (creating file if needed)"
