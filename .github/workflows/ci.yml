@@ -134,19 +134,63 @@ jobs:
           DIR=$(find "$GITHUB_WORKSPACE" -maxdepth 4 -type d -name mobile | head -n 1 || true)
           if [ -z "$DIR" ]; then echo "Mobile directory not found under $GITHUB_WORKSPACE"; exit 1; fi
           cd "$DIR"
+          echo "Listing android app dir contents:" && ls -la android/app || true
+
           BUILD_FILE="android/app/build.gradle"
+          BUILD_FILE_KTS="android/app/build.gradle.kts"
+          MANIFEST_XML="android/app/src/main/AndroidManifest.xml"
+
+          # Patch Groovy build.gradle
           if [ -f "$BUILD_FILE" ]; then
             echo "Patching $BUILD_FILE -> minSdkVersion 20 (perl-based)"
-            # If minSdkVersion exists, replace any numeric value with 20 (handles multiple syntaxes)
             perl -0777 -pe "s/minSdkVersion\s*\(?\s*\d+\s*\)?/minSdkVersion 20/g" -i "$BUILD_FILE" || true
-            # If defaultConfig exists but no minSdkVersion line, insert it after defaultConfig{
             if ! grep -q "minSdkVersion" "$BUILD_FILE"; then
-              echo "No minSdkVersion found after replacement, attempting to insert into defaultConfig"
               perl -0777 -pe "s/(defaultConfig\s*\{)/\1\n        minSdkVersion 20/" -i "$BUILD_FILE" || true
             fi
             echo "Resulting minSdkVersion lines:" && grep -n "minSdkVersion" "$BUILD_FILE" || true
           else
-            echo "$BUILD_FILE not found; skipping minSdk patch"
+            echo "$BUILD_FILE not found; skipping Groovy build.gradle patch"
+          fi
+
+          # Patch Kotlin build.gradle.kts
+          if [ -f "$BUILD_FILE_KTS" ]; then
+            echo "Patching $BUILD_FILE_KTS -> minSdk = 20"
+            perl -0777 -pe "s/minSdk\s*=\s*\d+/minSdk = 20/g" -i "$BUILD_FILE_KTS" || true
+            if ! grep -q "minSdk" "$BUILD_FILE_KTS"; then
+              perl -0777 -pe "s/(defaultConfig\s*\{)/\1\n        minSdk = 20/" -i "$BUILD_FILE_KTS" || true
+            fi
+            echo "Resulting minSdk lines:" && grep -n "minSdk" "$BUILD_FILE_KTS" || true
+          else
+            echo "$BUILD_FILE_KTS not found; skipping Kotlin build.gradle.kts patch"
+          fi
+
+          # Remove or update uses-sdk in AndroidManifest (sometimes flutter create adds one)
+          if [ -f "$MANIFEST_XML" ]; then
+            echo "Patching AndroidManifest.xml uses-sdk if present"
+            # Remove any <uses-sdk ... /> line
+            perl -0777 -ne 'print unless /<uses-sdk[^>]*>/s' "$MANIFEST_XML" > "$MANIFEST_XML.tmp" || true
+            mv "$MANIFEST_XML.tmp" "$MANIFEST_XML" || true
+            echo "After cleaning, printing any uses-sdk occurrences:" && grep -n "uses-sdk" -n "$MANIFEST_XML" || true
+          else
+            echo "$MANIFEST_XML not found; skipping manifest patch"
+          fi
+
+          # Final check: ensure at least one minSdk mention exists in app gradles
+          if ! (grep -R "minSdkVersion" android/app || grep -R "minSdk =" android/app); then
+            echo "No minSdk found in app gradles; inserting into build.gradle (creating file if needed)"
+            if [ -f "$BUILD_FILE" ]; then
+              perl -0777 -pe "s/(defaultConfig\s*\{)/\1\n        minSdkVersion 20/" -i "$BUILD_FILE" || true
+            else
+              mkdir -p android/app
+              cat > "$BUILD_FILE" <<'EOF'
+android {
+    defaultConfig {
+        minSdkVersion 20
+    }
+}
+EOF
+            fi
+            echo "Inserted minSdkVersion 20"
           fi
 
       - name: Run Flutter tests (if present)
