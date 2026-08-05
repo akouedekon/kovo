@@ -126,6 +126,8 @@ jobs:
           if [ -z "$DIR" ]; then echo "Mobile directory not found under $GITHUB_WORKSPACE"; exit 1; fi
           echo "Using mobile dir: $DIR"
           cd "$DIR"
+          # Force regenerate Android v2 embedding
+          rm -rf android/app/src/main/java/io android/app/src/main/kotlin/io 2>/dev/null || true
           flutter pub get
 
       - name: Ensure Android minSdkVersion >= 20 (robust patch after create)
