@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'screens/login_screen.dart';
 
 void main() {
   runApp(const KovoApp());
@@ -7,23 +8,15 @@ void main() {
 class KovoApp extends StatelessWidget {
   const KovoApp({super.key});
 
+  // Replace with your backend base URL
+  static const apiBase = 'https://api.kovo.example.com';
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Kovo',
-      home: const HomePage(),
-    );
-  }
-}
-
-class HomePage extends StatelessWidget {
-  const HomePage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Kovo')),
-      body: const Center(child: Text('Bienvenue sur Kovo — prototype')),
+      theme: ThemeData(primarySwatch: Colors.blue),
+      home: LoginScreen(apiBase: apiBase),
     );
   }
 }
