@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
-import 'package:latlong2/latlong.dart';
+import 'package:latlong/latlong.dart';
 import '../services/api.dart';
 import '../services/token_storage.dart';
 import 'search_results_screen.dart';
@@ -38,11 +38,11 @@ class _HomeScreenState extends State<HomeScreen> {
         Expanded(child: FlutterMap(
           mapController: _mapCtrl,
           options: MapOptions(
-            initialCenter: _center,
-            initialZoom: 12,
+            center: _center,
+            zoom: 12,
           ),
-          children: [
-            TileLayer(
+          layers: [
+            TileLayerOptions(
               urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
               userAgentPackageName: 'com.kovo.mobile',
             ),
