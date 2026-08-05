@@ -177,11 +177,7 @@ jobs:
           for flavor in main profile debug; do
             MANIFEST_DIR="android/app/src/$flavor"
             mkdir -p "$MANIFEST_DIR"
-            cat > "$MANIFEST_DIR/AndroidManifest.xml" <<'EOF'
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.kovo">
-</manifest>
-EOF
+            printf '%s\n' '<manifest xmlns:android="http://schemas.android.com/apk/res/android"' '    package="com.example.kovo">' '</manifest>' > "$MANIFEST_DIR/AndroidManifest.xml"
             echo "Wrote $MANIFEST_DIR/AndroidManifest.xml"
           done
 
@@ -192,13 +188,7 @@ EOF
               perl -0777 -pe "s/(defaultConfig\s*\{)/\1\n        minSdkVersion 20/" -i "$BUILD_FILE" || true
             else
               mkdir -p android/app
-              cat > "$BUILD_FILE" <<'EOF'
-android {
-    defaultConfig {
-        minSdkVersion 20
-    }
-}
-EOF
+              printf '%s\n' 'android {' '    defaultConfig {' '        minSdkVersion 20' '    }' '}' > "$BUILD_FILE"
             fi
             echo "Inserted minSdkVersion 20"
           fi
