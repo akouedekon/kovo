@@ -147,10 +147,16 @@ jobs:
             # Replace usages of the flutter property (minSdkVersion flutter.minSdkVersion -> minSdkVersion 20)
             sed -E -i.bak 's/minSdkVersion[[:space:]]+flutter\.minSdkVersion/minSdkVersion 20/g' "$BUILD_FILE" || true
             sed -E -i.bak 's/minSdkVersion[[:space:]]*=[[:space:]]*flutter\.minSdkVersion/minSdkVersion 20/g' "$BUILD_FILE" || true
+            # Also patch compileSdkVersion to 34
+            perl -0777 -pe "s/compileSdkVersion\s*\(?\s*\d+\s*\)?/compileSdkVersion 34/g" -i "$BUILD_FILE" || true
+            sed -E -i.bak 's/compileSdkVersion[[:space:]]+flutter\.compileSdkVersion/compileSdkVersion 34/g' "$BUILD_FILE" || true
             if ! grep -q "minSdkVersion" "$BUILD_FILE"; then
               perl -0777 -pe "s/(defaultConfig\s*\{)/\1\n        minSdkVersion 20/" -i "$BUILD_FILE" || true
             fi
-            echo "Resulting minSdkVersion lines:" && grep -n "minSdkVersion" "$BUILD_FILE" || true
+            if ! grep -q "compileSdkVersion" "$BUILD_FILE"; then
+              perl -0777 -pe "s/(android\s*\{)/\1\n    compileSdkVersion 34/" -i "$BUILD_FILE" || true
+            fi
+            echo "Resulting minSdkVersion and compileSdkVersion lines:" && grep -nE "minSdkVersion|compileSdkVersion" "$BUILD_FILE" || true
           else
             echo "$BUILD_FILE not found; skipping Groovy build.gradle patch"
           fi
