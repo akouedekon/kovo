@@ -96,7 +96,7 @@ jobs:
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.13.0'
+          flutter-version: '3.24.0'
 
       - name: "Debug: list workspace"
         run: |
@@ -145,13 +145,13 @@ jobs:
             # Create a minimal, clean build.gradle without module() API using printf
             printf '%s\n' \
               'buildscript {' \
-              '    ext.kotlin_version = "1.6.21"' \
+              '    ext.kotlin_version = "1.9.0"' \
               '    repositories {' \
               '        google()' \
               '        mavenCentral()' \
               '    }' \
               '    dependencies {' \
-              '        classpath "com.android.tools.build:gradle:7.0.0"' \
+              '        classpath "com.android.tools.build:gradle:8.1.0"' \
               '        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"' \
               '    }' \
               '}' \
