@@ -6,7 +6,7 @@ plugins {
 
 android {
     namespace = "com.example.kovo_mobile"
-    compileSdk = flutter.compileSdkVersion
+    compileSdk = 34
     ndkVersion = flutter.ndkVersion
 
     defaultConfig {
