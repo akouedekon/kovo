@@ -205,7 +205,7 @@ jobs:
     needs: [backend-tests, mobile-tests, admin-build]
     defaults:
       run:
-        working-directory: ./files/kovo
+        working-directory: .
     steps:
       - name: Checkout
         uses: actions/checkout@v4
