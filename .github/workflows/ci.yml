@@ -39,9 +39,17 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-maven-
 
-      - name: Run Maven tests
+      - name: Run Maven tests (Unix)
+        if: matrix.os != 'windows-latest'
         run: |
           if [ -d "./files/kovo/backend" ]; then cd ./files/kovo/backend; elif [ -d "./backend" ]; then cd ./backend; else echo "Backend directory not found"; exit 1; fi
+          mvn -B test --fail-at-end
+
+      - name: Run Maven tests (Windows)
+        if: matrix.os == 'windows-latest'
+        shell: pwsh
+        run: |
+          if (Test-Path -Path "./files/kovo/backend") { Set-Location -Path "./files/kovo/backend" } elseif (Test-Path -Path "./backend") { Set-Location -Path "./backend" } else { Write-Error "Backend directory not found"; exit 1 }
           mvn -B test --fail-at-end
 
       - name: Upload surefire reports
