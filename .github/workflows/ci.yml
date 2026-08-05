@@ -144,6 +144,9 @@ jobs:
           if [ -f "$BUILD_FILE" ]; then
             echo "Patching $BUILD_FILE -> minSdkVersion 20 (perl-based)"
             perl -0777 -pe "s/minSdkVersion\s*\(?\s*\d+\s*\)?/minSdkVersion 20/g" -i "$BUILD_FILE" || true
+            # Replace usages of the flutter property (minSdkVersion flutter.minSdkVersion -> minSdkVersion 20)
+            sed -E -i.bak 's/minSdkVersion[[:space:]]+flutter\.minSdkVersion/minSdkVersion 20/g' "$BUILD_FILE" || true
+            sed -E -i.bak 's/minSdkVersion[[:space:]]*=[[:space:]]*flutter\.minSdkVersion/minSdkVersion 20/g' "$BUILD_FILE" || true
             if ! grep -q "minSdkVersion" "$BUILD_FILE"; then
               perl -0777 -pe "s/(defaultConfig\s*\{)/\1\n        minSdkVersion 20/" -i "$BUILD_FILE" || true
             fi
