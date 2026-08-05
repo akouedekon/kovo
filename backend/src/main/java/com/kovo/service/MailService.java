@@ -33,7 +33,8 @@ public class MailService {
 
         try{
             MimeMessage mime = mailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(mime, mime.getMimeType() != null, StandardCharsets.UTF_8.name());
+                        // true = multipart (allow HTML), UTF-8 charset
+                        MimeMessageHelper helper = new MimeMessageHelper(mime, true, StandardCharsets.UTF_8.name());
             helper.setTo(to);
             helper.setSubject(subject);
             helper.setText(html, true);
