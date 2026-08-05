@@ -10,12 +10,14 @@ spring:
       ddl-auto: update
     show-sql: true
 kkiapay:
-  apiKey: YOUR_KKIAPAY_KEY_HERE
+  publicKey: f50ec860469a11f0bef503dd09e0f138
+  privateKey: tpk_f50fd9d0469a11f0bef503dd09e0f138
+  apiUrl: https://sandbox.kkiapay.me
 mail:
-  host: ${MAIL_HOST:}
-  port: ${MAIL_PORT:587}
-  username: ${MAIL_USERNAME:}
-  password: ${MAIL_PASSWORD:}
+  host: ${MAIL_HOST:smtp.hostinger.com}
+  port: ${MAIL_PORT:465}
+  username: ${MAIL_USERNAME:contact@auneapp.com}
+  password: ${MAIL_PASSWORD:Lones2019!}
   properties:
     mail:
       smtp:
