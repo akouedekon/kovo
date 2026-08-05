@@ -241,7 +241,7 @@ jobs:
           echo "=== android/app/build.gradle (first 50 lines) ===" && head -50 android/app/build.gradle || echo "Not found"
           echo "=== Checking for compileSdkVersion in build.gradle ===" && grep -nE "compileSdkVersion|minSdkVersion" android/app/build.gradle || echo "Not found"
 
-      - name: Patch Flutter Groovy script to remove incompatible imports
+      - name: Patch Flutter Groovy script to remove incompatible imports and usages
         run: |
           set -e
           GROOVY_FILE="$FLUTTER_ROOT/packages/flutter_tools/gradle/src/main/groovy/flutter.groovy"
@@ -250,7 +250,13 @@ jobs:
             # Remove problematic imports
             sed -i '/import org\.gradle\.util\.VersionNumber/d' "$GROOVY_FILE" || true
             sed -i '/import groovy\.xml\.QName/d' "$GROOVY_FILE" || true
-            echo "Patched imports removed"
+            sed -i '/import groovy\.xml\./d' "$GROOVY_FILE" || true
+            
+            # Comment out XmlParser usages to avoid runtime errors
+            sed -i 's/def manifest = new XmlParser()/\/\/ def manifest = new XmlParser()/' "$GROOVY_FILE" || true
+            sed -i 's/\.parse(processResources\.manifestFile)/\/\/ .parse(processResources.manifestFile)/' "$GROOVY_FILE" || true
+            
+            echo "Patched imports and XmlParser usages removed"
             echo "First 40 lines of patched file:"
             head -40 "$GROOVY_FILE"
           else
