@@ -1,4 +1,4 @@
-package com.example.kovo_mobile
+package com.kovo.kovo_mobile
 
 import io.flutter.embedding.android.FlutterActivity
 

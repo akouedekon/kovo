@@ -16,7 +16,7 @@ subprojects {
     project.layout.buildDirectory.value(newSubprojectBuildDir)
 }
 subprojects {
-    // project.evaluationDependsOn(":app")  // Not compatible with AGP 8.1.2
+    project.evaluationDependsOn(":app")
 }
 
 tasks.register<Delete>("clean") {
