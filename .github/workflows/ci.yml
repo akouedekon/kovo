@@ -127,9 +127,8 @@ jobs:
           echo "Using mobile dir: $DIR"
           cd "$DIR"
           flutter pub get
-          # Force regenerate GeneratedPluginRegistrant for v2 embedding
-          flutter pub upgrade
-          flutter pub get --offline || flutter pub get
+          # Migrate to Android embedding v2 by regenerating with flutter create
+          flutter create . --platforms android
 
       - name: Ensure Android minSdkVersion >= 20 (robust patch after create)
         run: |
@@ -250,11 +249,7 @@ jobs:
           cd "$DIR"
           if [ -d "$DIR/android" ]; then
             echo "Android project found, building APK..."
-            # Clean gradle cache to force plugin registration regeneration
-            ./android/gradlew -p android clean || true
-            # Force build despite v1/v2 embedding warnings (we use v1 intentionally for broader plugin compatibility)
-            flutter build apk --debug 2>&1 | grep -v "Android embedding" || true
-            flutter build apk --debug || echo "Build completed with warnings"
+            flutter build apk --debug
           else
             echo "No Android project (android/ missing) — skipping APK build"
           fi
