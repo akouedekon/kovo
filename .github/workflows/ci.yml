@@ -229,6 +229,16 @@ jobs:
           cd "$DIR"
           flutter test --machine > flutter_test_output.json || true
 
+      - name: Debug - Show gradle configuration files
+        run: |
+          set -e
+          DIR=$(find "$GITHUB_WORKSPACE" -maxdepth 4 -type d -name mobile | head -n 1 || true)
+          if [ -z "$DIR" ]; then echo "Mobile directory not found"; exit 0; fi
+          cd "$DIR"
+          echo "=== android/gradle.properties ===" && cat android/gradle.properties || echo "Not found"
+          echo "=== android/app/build.gradle (first 50 lines) ===" && head -50 android/app/build.gradle || echo "Not found"
+          echo "=== Checking for compileSdkVersion in build.gradle ===" && grep -nE "compileSdkVersion|minSdkVersion" android/app/build.gradle || echo "Not found"
+
       - name: Build APK (debug) if Android project exists
         run: |
           set -e
