@@ -142,37 +142,32 @@ jobs:
             echo "=== Original build.gradle (first 35 lines) ==="
             head -35 "$BUILD_FILE" || true
             
-            # Create a minimal, clean build.gradle without module() API
-            cat > "$BUILD_FILE" << 'EOF'
-buildscript {
-    ext.kotlin_version = '1.6.21'
-    repositories {
-        google()
-        mavenCentral()
-    }
-
-    dependencies {
-        classpath 'com.android.tools.build:gradle:7.0.0'
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-    }
-}
-
-allprojects {
-    repositories {
-        google()
-        mavenCentral()
-    }
-}
-
-rootProject.buildDir = '../build'
-subprojects {
-    project.buildDir = "${rootProject.buildDir}/${project.name}"
-}
-
-task clean(type: Delete) {
-    delete rootProject.buildDir
-}
-EOF
+            # Create a minimal, clean build.gradle without module() API using printf
+            printf '%s\n' \
+              'buildscript {' \
+              '    ext.kotlin_version = "1.6.21"' \
+              '    repositories {' \
+              '        google()' \
+              '        mavenCentral()' \
+              '    }' \
+              '    dependencies {' \
+              '        classpath "com.android.tools.build:gradle:7.0.0"' \
+              '        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"' \
+              '    }' \
+              '}' \
+              'allprojects {' \
+              '    repositories {' \
+              '        google()' \
+              '        mavenCentral()' \
+              '    }' \
+              '}' \
+              'rootProject.buildDir = "../build"' \
+              'subprojects {' \
+              '    project.buildDir = "${rootProject.buildDir}/${project.name}"' \
+              '}' \
+              'task clean(type: Delete) {' \
+              '    delete rootProject.buildDir' \
+              '}' > "$BUILD_FILE"
             
             echo "Replaced build.gradle with clean version"
             echo "=== New build.gradle ===" && cat "$BUILD_FILE"
