@@ -122,13 +122,18 @@ jobs:
           cd "$DIR"
           flutter test --machine > flutter_test_output.json || true
 
-      - name: Build APK (debug)
+      - name: Build APK (debug) if Android project exists
         run: |
           set -e
           DIR=$(find "$GITHUB_WORKSPACE" -maxdepth 4 -type d -name mobile | head -n 1 || true)
           if [ -z "$DIR" ]; then echo "Mobile directory not found under $GITHUB_WORKSPACE"; exit 1; fi
           cd "$DIR"
-          flutter build apk --debug
+          if [ -d "$DIR/android" ]; then
+            echo "Android project found, building APK..."
+            flutter build apk --debug
+          else
+            echo "No Android project (android/ missing) — skipping APK build"
+          fi
 
       - name: Upload flutter artifacts
         if: always()
