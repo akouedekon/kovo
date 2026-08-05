@@ -24,6 +24,13 @@ jobs:
           distribution: temurin
           java-version: '17'
 
+      - name: Debug: list workspace
+        run: |
+          echo "PWD: $(pwd)" 
+          ls -la || true
+          ls -la . || true
+          ls -la files || true
+
       - name: Cache Maven packages
         uses: actions/cache@v4
         with:
@@ -65,7 +72,14 @@ jobs:
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: 'stable'
+          flutter-version: '3.10.6'
+
+      - name: Debug: list workspace
+        run: |
+          echo "PWD: $(pwd)"
+          ls -la || true
+          ls -la files || true
+          ls -la files/kovo || true
 
       - name: Flutter pub get
         run: |
@@ -104,6 +118,13 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+
+      - name: Debug: list workspace
+        run: |
+          echo "PWD: $(pwd)"
+          ls -la || true
+          ls -la files || true
+          ls -la files/kovo || true
 
       - name: Cache node modules
         uses: actions/cache@v4
