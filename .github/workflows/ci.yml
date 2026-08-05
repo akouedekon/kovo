@@ -142,37 +142,36 @@ jobs:
           echo "Removed Groovy build.gradle"
           
           # Create Kotlin DSL build.gradle.kts (no Groovy compilation issues)
-          cat > android/build.gradle.kts << 'EOFKTS'
-buildscript {
-    repositories {
-        google()
-        mavenCentral()
-    }
-    dependencies {
-        classpath("com.android.tools.build:gradle:8.1.0")
-        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.0")
-    }
-}
-
-allprojects {
-    repositories {
-        google()
-        mavenCentral()
-    }
-}
-
-val newBuildDir: Directory = rootDir.dir("../build")
-rootProject.layout.buildDirectory.value(newBuildDir)
-
-subprojects {
-    val newSubBuildDir: Directory = newBuildDir.dir(project.name)
-    project.layout.buildDirectory.value(newSubBuildDir)
-}
-
-tasks.register<Delete>("clean") {
-    delete(rootProject.layout.buildDirectory)
-}
-EOFKTS
+          printf '%s\n' \
+            'buildscript {' \
+            '    repositories {' \
+            '        google()' \
+            '        mavenCentral()' \
+            '    }' \
+            '    dependencies {' \
+            '        classpath("com.android.tools.build:gradle:8.1.0")' \
+            '        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.0")' \
+            '    }' \
+            '}' \
+            '' \
+            'allprojects {' \
+            '    repositories {' \
+            '        google()' \
+            '        mavenCentral()' \
+            '    }' \
+            '}' \
+            '' \
+            'val newBuildDir: Directory = rootDir.dir("../build")' \
+            'rootProject.layout.buildDirectory.value(newBuildDir)' \
+            '' \
+            'subprojects {' \
+            '    val newSubBuildDir: Directory = newBuildDir.dir(project.name)' \
+            '    project.layout.buildDirectory.value(newSubBuildDir)' \
+            '}' \
+            '' \
+            'tasks.register<Delete>("clean") {' \
+            '    delete(rootProject.layout.buildDirectory)' \
+            '}' > android/build.gradle.kts
             
           echo "Created build.gradle.kts (Kotlin DSL - no Groovy issues)"
           echo "=== build.gradle.kts ===" && cat android/build.gradle.kts
