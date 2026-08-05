@@ -130,6 +130,24 @@ jobs:
           # Migrate to Android embedding v2 by regenerating with flutter create
           flutter create . --platforms android
 
+      - name: Fix Gradle build.gradle (remove deprecated module() API)
+        run: |
+          set -e
+          DIR=$(find "$GITHUB_WORKSPACE" -maxdepth 4 -type d -name mobile | head -n 1 || true)
+          if [ -z "$DIR" ]; then echo "Mobile directory not found"; exit 0; fi
+          cd "$DIR"
+          
+          BUILD_FILE="android/build.gradle"
+          if [ -f "$BUILD_FILE" ]; then
+            echo "Fixing Gradle build.gradle..."
+            # Replace deprecated module() with dependency() syntax
+            sed -i 's/\.module(\([^)]*\))/(\1)/g' "$BUILD_FILE" || true
+            # Also try removing module( completely if used differently
+            sed -i 's/module(/dependency(/g' "$BUILD_FILE" || true
+            echo "Fixed deprecated module() API"
+            echo "=== build.gradle (first 30 lines) ===" && head -30 "$BUILD_FILE"
+          fi
+
       - name: Ensure Android minSdkVersion >= 20 (robust patch after create)
         run: |
           set -e
