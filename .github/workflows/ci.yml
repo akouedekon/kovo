@@ -105,6 +105,20 @@ jobs:
           ls -la files || true
           ls -la files/kovo || true
 
+      - name: Ensure Flutter project exists (flutter create if missing)
+        run: |
+          set -e
+          DIR=$(find "$GITHUB_WORKSPACE" -maxdepth 4 -type d -name mobile | head -n 1 || true)
+          if [ -z "$DIR" ]; then echo "Mobile directory not found under $GITHUB_WORKSPACE"; exit 1; fi
+          echo "Using mobile dir: $DIR"
+          cd "$DIR"
+          if [ ! -d android ]; then
+            echo "Android dir missing — running flutter create ."
+            flutter create -t app .
+          else
+            echo "Android dir exists — skipping flutter create"
+          fi
+
       - name: Flutter pub get
         run: |
           set -e
