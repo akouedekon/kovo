@@ -13,9 +13,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-    defaults:
-      run:
-        working-directory: ./files/kovo/backend
+    # avoid relying on checkout layout; try either files/kovo/backend or backend
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -35,28 +33,31 @@ jobs:
             ${{ runner.os }}-maven-
 
       - name: Run Maven tests
-        run: mvn -B test --fail-at-end
+        run: |
+          if [ -d "./files/kovo/backend" ]; then cd ./files/kovo/backend; elif [ -d "./backend" ]; then cd ./backend; else echo "Backend directory not found"; exit 1; fi
+          mvn -B test --fail-at-end
 
       - name: Upload surefire reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: surefire-reports-${{ matrix.os }}
-          path: target/surefire-reports/**
+          path: |
+            files/kovo/backend/target/surefire-reports/**
+            backend/target/surefire-reports/**
 
       - name: Upload application logs (if any)
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: backend-logs-${{ matrix.os }}
-          path: target/**/*.log
+          path: |
+            files/kovo/backend/target/**/*.log
+            backend/target/**/*.log
 
   mobile-tests:
     name: Mobile - Flutter tests & build
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./files/kovo/mobile
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -67,13 +68,19 @@ jobs:
           flutter-version: 'stable'
 
       - name: Flutter pub get
-        run: flutter pub get
+        run: |
+          if [ -d "./files/kovo/mobile" ]; then cd ./files/kovo/mobile; elif [ -d "./mobile" ]; then cd ./mobile; else echo "Mobile directory not found"; exit 1; fi
+          flutter pub get
 
       - name: Run Flutter tests (if present)
-        run: flutter test --machine > flutter_test_output.json || true
+        run: |
+          if [ -d "./files/kovo/mobile" ]; then cd ./files/kovo/mobile; elif [ -d "./mobile" ]; then cd ./mobile; else echo "Mobile directory not found"; exit 1; fi
+          flutter test --machine > flutter_test_output.json || true
 
       - name: Build APK (debug)
-        run: flutter build apk --debug
+        run: |
+          if [ -d "./files/kovo/mobile" ]; then cd ./files/kovo/mobile; elif [ -d "./mobile" ]; then cd ./mobile; else echo "Mobile directory not found"; exit 1; fi
+          flutter build apk --debug
 
       - name: Upload flutter artifacts
         if: always()
@@ -81,15 +88,14 @@ jobs:
         with:
           name: flutter-artifacts
           path: |
-            build/app/outputs/**/*.apk
-            flutter_test_output.json
+            files/kovo/mobile/build/app/outputs/**/*.apk
+            mobile/build/app/outputs/**/*.apk
+            files/kovo/mobile/flutter_test_output.json
+            mobile/flutter_test_output.json
 
   admin-build:
     name: Admin - Node build
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./files/kovo/admin
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -108,17 +114,23 @@ jobs:
             ${{ runner.os }}-node-
 
       - name: Install dependencies
-        run: npm ci
+        run: |
+          if [ -d "./files/kovo/admin" ]; then cd ./files/kovo/admin; elif [ -d "./admin" ]; then cd ./admin; else echo "Admin directory not found"; exit 1; fi
+          npm ci
 
       - name: Build admin
-        run: npm run build
+        run: |
+          if [ -d "./files/kovo/admin" ]; then cd ./files/kovo/admin; elif [ -d "./admin" ]; then cd ./admin; else echo "Admin directory not found"; exit 1; fi
+          npm run build
 
       - name: Upload admin build
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: admin-build
-          path: dist/**
+          path: |
+            files/kovo/admin/dist/**
+            admin/dist/**
 
   build-docker:
     name: Build Docker images
