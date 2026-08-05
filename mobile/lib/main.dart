@@ -1,8 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'screens/login_screen.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await _requestPermissions();
   runApp(const KovoApp());
+}
+
+Future<void> _requestPermissions() async {
+  await Permission.location.request();
 }
 
 class KovoApp extends StatelessWidget {
