@@ -145,7 +145,7 @@ jobs:
       - name: Install dependencies
         run: |
           if [ -d "./files/kovo/admin" ]; then cd ./files/kovo/admin; elif [ -d "./admin" ]; then cd ./admin; else echo "Admin directory not found"; exit 1; fi
-          npm ci
+          if [ -f package-lock.json ]; then npm ci; else npm install; fi
 
       - name: Build admin
         run: |
