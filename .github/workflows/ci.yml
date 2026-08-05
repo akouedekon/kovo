@@ -164,16 +164,14 @@ jobs:
             echo "$BUILD_FILE_KTS not found; skipping Kotlin build.gradle.kts patch"
           fi
 
-          # Remove or update uses-sdk in AndroidManifest (sometimes flutter create adds one)
-          if [ -f "$MANIFEST_XML" ]; then
-            echo "Patching AndroidManifest.xml uses-sdk if present"
-            # Remove any <uses-sdk ... /> line
-            perl -0777 -ne 'print unless /<uses-sdk[^>]*>/s' "$MANIFEST_XML" > "$MANIFEST_XML.tmp" || true
-            mv "$MANIFEST_XML.tmp" "$MANIFEST_XML" || true
-            echo "After cleaning, printing any uses-sdk occurrences:" && grep -n "uses-sdk" -n "$MANIFEST_XML" || true
-          else
-            echo "$MANIFEST_XML not found; skipping manifest patch"
-          fi
+          # Remove or update uses-sdk in ALL AndroidManifest.xml files under android/app/src
+          echo "Removing <uses-sdk> entries from any AndroidManifest.xml under android/app/src"
+          for f in $(find android/app/src -type f -name "AndroidManifest.xml" 2>/dev/null || true); do
+            echo "Processing manifest: $f"
+            perl -0777 -ne 'print unless /<uses-sdk[^>]*>/s' "$f" > "$f.tmp" || true
+            mv "$f.tmp" "$f" || true
+            echo "After cleaning, occurrences:" && grep -n "uses-sdk" -n "$f" || true
+          done
 
           # Final check: ensure at least one minSdk mention exists in app gradles
           if ! (grep -R "minSdkVersion" android/app || grep -R "minSdk =" android/app); then
