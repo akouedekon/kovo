@@ -10,11 +10,20 @@ spring:
       ddl-auto: update
     show-sql: true
 kkiapay:
-  apiKey: YOUR_KKIAPAY_KEY_HERE
-sms:
-  provider: placeholder
-  apiKey: YOUR_SMS_PROVIDER_KEY
+  apiKey: ce3062966c1f7e0e136f2600ad4eabaa0ec34b5f
+mail:
+  host: ${MAIL_HOST:smtp.hostinger.com}
+  port: ${MAIL_PORT:465}
+  username: ${MAIL_USERNAME:contact@auneapp.com}
+  password: ${MAIL_PASSWORD:Lones2019!}
+  properties:
+    mail:
+      smtp:
+        auth: true
+        starttls.enable: true
 jwt:
   secret: "REPLACE_WITH_LONG_SECRET_AT_LEAST_32_CHARS_ChangeMe"
   accessTokenSeconds: 900 # 15 minutes
   refreshTokenDays: 30
+auth:
+  debug: true

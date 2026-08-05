@@ -1,0 +1,22 @@
+<!doctype html>
+<html>
+  <head><meta charset="utf-8"><title>Simulate Payment</title></head>
+  <body>
+    <h1>Simulate Payment</h1>
+    <p id="info">Payment simulation page</p>
+    <button id="ok">Simulate success</button>
+    <script>
+      const btn = document.getElementById('ok');
+      btn.addEventListener('click', async () => {
+        const params = new URLSearchParams(window.location.search);
+        const paymentId = window.location.pathname.split('/').pop();
+        const bookingId = params.get('bookingId') || '';
+        const payload = { paymentId, bookingId, status: 'success' };
+        await fetch('/api/payments/webhook', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+        // redirect to a known success URL so the mobile app can detect it
+        const successUrl = '/payments/success?bookingId=' + encodeURIComponent(bookingId) + '&paymentId=' + encodeURIComponent(paymentId);
+        window.location.href = successUrl;
+      });
+    </script>
+  </body>
+</html>
