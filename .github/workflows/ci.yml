@@ -96,7 +96,7 @@ jobs:
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.24.0'
+          flutter-version: '2.10.5'
 
       - name: "Debug: list workspace"
         run: |
@@ -149,8 +149,8 @@ jobs:
             '        mavenCentral()' \
             '    }' \
             '    dependencies {' \
-            '        classpath("com.android.tools.build:gradle:8.1.0")' \
-            '        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.0")' \
+            '        classpath("com.android.tools.build:gradle:4.1.0")' \
+            '        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.4.32")' \
             '    }' \
             '}' \
             '' \
@@ -161,17 +161,14 @@ jobs:
             '    }' \
             '}' \
             '' \
-            'val newBuildDir: Directory = rootDir.dir("../build")' \
-            'rootProject.layout.buildDirectory.value(newBuildDir)' \
-            '' \
+            'rootProject.buildDir = "../build"' \
             'subprojects {' \
-            '    val newSubBuildDir: Directory = newBuildDir.dir(project.name)' \
-            '    project.layout.buildDirectory.value(newSubBuildDir)' \
+            '    project.buildDir = "${rootProject.buildDir}/${project.name}"' \
             '}' \
             '' \
-            'tasks.register<Delete>("clean") {' \
-            '    delete(rootProject.layout.buildDirectory)' \
-            '}' > android/build.gradle.kts
+            'task clean(type: Delete) {' \
+            '    delete rootProject.buildDir' \
+            '}' > android/build.gradle
             
           echo "Created build.gradle.kts (Kotlin DSL - no Groovy issues)"
           echo "=== build.gradle.kts ===" && cat android/build.gradle.kts
