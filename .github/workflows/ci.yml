@@ -180,7 +180,7 @@ jobs:
           for flavor in main profile debug; do
             MANIFEST_DIR="android/app/src/$flavor"
             mkdir -p "$MANIFEST_DIR"
-            printf '%s\n' '<manifest xmlns:android="http://schemas.android.com/apk/res/android">' '  <application android:label="kovo" android:icon="@mipmap/ic_launcher">' '    <meta-data android:name="flutterEmbedding" android:value="2" />' '  </application>' '</manifest>' > "$MANIFEST_DIR/AndroidManifest.xml"
+            printf '%s\n' '<manifest xmlns:android="http://schemas.android.com/apk/res/android">' '  <uses-sdk android:minSdkVersion="20" />' '  <application android:label="kovo" android:icon="@mipmap/ic_launcher">' '    <meta-data android:name="flutterEmbedding" android:value="2" />' '  </application>' '</manifest>' > "$MANIFEST_DIR/AndroidManifest.xml"
             echo "Wrote $MANIFEST_DIR/AndroidManifest.xml"
           done
 
