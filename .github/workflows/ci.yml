@@ -295,13 +295,19 @@ jobs:
             sed -i '/import groovy\.xml\.QName/d' "$GROOVY_FILE" || true
             sed -i '/import groovy\.xml\./d' "$GROOVY_FILE" || true
             
-            # Comment out XmlParser usages to avoid runtime errors
-            sed -i 's/def manifest = new XmlParser()/\/\/ def manifest = new XmlParser()/' "$GROOVY_FILE" || true
-            sed -i 's/\.parse(processResources\.manifestFile)/\/\/ .parse(processResources.manifestFile)/' "$GROOVY_FILE" || true
+            # Comment out QName usages to prevent compilation errors
+            sed -i 's/if (entry\.key instanceof QName)/if (false \/\/ QName check disabled/' "$GROOVY_FILE" || true
             
-            echo "Patched imports and XmlParser usages removed"
+            # Comment out XmlParser usages
+            sed -i 's/def manifest = new XmlParser()/\/\/ def manifest = new XmlParser()/' "$GROOVY_FILE" || true
+            sed -i 's/manifest\.parse(processResources\.manifestFile)/{}  \/\/ manifest.parse disabled/' "$GROOVY_FILE" || true
+            
+            echo "Patched imports and usages removed"
             echo "First 40 lines of patched file:"
             head -40 "$GROOVY_FILE"
+            echo ""
+            echo "Lines with QName after patching:"
+            grep -n "QName" "$GROOVY_FILE" || echo "None (good!)"
           else
             echo "flutter.groovy not found at $GROOVY_FILE"
           fi
