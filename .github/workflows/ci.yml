@@ -126,9 +126,10 @@ jobs:
           if [ -z "$DIR" ]; then echo "Mobile directory not found under $GITHUB_WORKSPACE"; exit 1; fi
           echo "Using mobile dir: $DIR"
           cd "$DIR"
-          # Force regenerate Android v2 embedding
-          rm -rf android/app/src/main/java/io android/app/src/main/kotlin/io 2>/dev/null || true
           flutter pub get
+          # Force regenerate GeneratedPluginRegistrant for v2 embedding
+          flutter pub upgrade
+          flutter pub get --offline || flutter pub get
 
       - name: Ensure Android minSdkVersion >= 20 (robust patch after create)
         run: |
@@ -249,6 +250,8 @@ jobs:
           cd "$DIR"
           if [ -d "$DIR/android" ]; then
             echo "Android project found, building APK..."
+            # Clean gradle cache to force plugin registration regeneration
+            ./android/gradlew -p android clean || true
             flutter build apk --debug
           else
             echo "No Android project (android/ missing) — skipping APK build"
