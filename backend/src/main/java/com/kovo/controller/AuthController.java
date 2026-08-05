@@ -21,13 +21,13 @@ public class AuthController {
 
     @PostMapping("/request-otp")
     public ResponseEntity<?> requestOtp(@Valid @RequestBody RequestOtpDto req){
-        authService.requestOtp(req.getPhone());
+        authService.requestOtp(req.getEmail());
         return ResponseEntity.ok(Map.of("status","otp_sent"));
     }
 
     @PostMapping("/verify-otp")
     public ResponseEntity<?> verifyOtp(@Valid @RequestBody VerifyOtpDto req){
-        Map<String,String> tokens = authService.verifyOtp(req.getPhone(), req.getCode());
+        Map<String,String> tokens = authService.verifyOtp(req.getEmail(), req.getCode());
         if(tokens.containsKey("error")){
             return ResponseEntity.status(400).body(tokens);
         }
@@ -43,8 +43,8 @@ public class AuthController {
     }
 
     @GetMapping("/debug-otp")
-    public ResponseEntity<?> debugOtp(@RequestParam String phone){
-        String code = authService.getOtpForPhone(phone);
+    public ResponseEntity<?> debugOtp(@RequestParam String email){
+        String code = authService.getOtpForEmail(email);
         if(code == null) return ResponseEntity.status(404).body(Map.of("error","not_available"));
         return ResponseEntity.ok(Map.of("otp", code));
     }

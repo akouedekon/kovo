@@ -65,12 +65,12 @@ public class BookingConcurrencyTest {
         List<String> accessTokens = new ArrayList<>();
         List<Long> passengerIds = new ArrayList<>();
         for(int i=0;i<threads;i++){
-            String phone = "+2297000000" + (i+1); // test phones
-            Map<String,String> req = Map.of("phone", phone);
+            String email = "test" + (i+1) + "@example.com";
+            Map<String,String> req = Map.of("email", email);
             mockMvc.perform(post("/api/auth/request-otp").contentType(MediaType.APPLICATION_JSON).content(objectMapper.writeValueAsString(req))).andReturn();
-            MvcResult otpRes = mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/api/auth/debug-otp").param("phone", phone)).andReturn();
+            MvcResult otpRes = mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/api/auth/debug-otp").param("email", email)).andReturn();
             String otp = objectMapper.readTree(otpRes.getResponse().getContentAsString()).get("otp").asText();
-            Map<String,String> verify = Map.of("phone", phone, "code", otp);
+            Map<String,String> verify = Map.of("email", email, "code", otp);
             MvcResult verifyRes = mockMvc.perform(post("/api/auth/verify-otp").contentType(MediaType.APPLICATION_JSON).content(objectMapper.writeValueAsString(verify))).andReturn();
             String token = objectMapper.readTree(verifyRes.getResponse().getContentAsString()).get("accessToken").asText();
             // parse user id from token using JwtUtil bean

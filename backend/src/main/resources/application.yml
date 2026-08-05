@@ -11,10 +11,19 @@ spring:
     show-sql: true
 kkiapay:
   apiKey: YOUR_KKIAPAY_KEY_HERE
-sms:
-  provider: placeholder
-  apiKey: YOUR_SMS_PROVIDER_KEY
+mail:
+  host: ${MAIL_HOST:}
+  port: ${MAIL_PORT:587}
+  username: ${MAIL_USERNAME:}
+  password: ${MAIL_PASSWORD:}
+  properties:
+    mail:
+      smtp:
+        auth: true
+        starttls.enable: true
 jwt:
   secret: "REPLACE_WITH_LONG_SECRET_AT_LEAST_32_CHARS_ChangeMe"
   accessTokenSeconds: 900 # 15 minutes
   refreshTokenDays: 30
+auth:
+  debug: true
