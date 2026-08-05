@@ -140,11 +140,10 @@ jobs:
           BUILD_FILE="android/build.gradle"
           if [ -f "$BUILD_FILE" ]; then
             echo "Fixing Gradle build.gradle..."
-            # Replace deprecated module() with dependency() syntax
-            sed -i 's/\.module(\([^)]*\))/(\1)/g' "$BUILD_FILE" || true
-            # Also try removing module( completely if used differently
-            sed -i 's/module(/dependency(/g' "$BUILD_FILE" || true
-            echo "Fixed deprecated module() API"
+            # Remove entire lines containing deprecated module() API
+            sed -i '/\.module(/d' "$BUILD_FILE" || true
+            sed -i '/module(/d' "$BUILD_FILE" || true
+            echo "Removed deprecated module() lines"
             echo "=== build.gradle (first 30 lines) ===" && head -30 "$BUILD_FILE"
           fi
 
