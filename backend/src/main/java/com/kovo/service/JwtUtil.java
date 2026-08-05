@@ -17,7 +17,7 @@ public class JwtUtil {
     private final Key key;
 
     @Value("${jwt.accessTokenSeconds:900}")
-    private long accessTokenSeconds;
+    private long accessTokenSeconds = 900;
 
     public JwtUtil(@Value("${jwt.secret}") String secret) {
         this.key = Keys.hmacShaKeyFor(secret.getBytes());
