@@ -24,12 +24,21 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: "Debug: list workspace"
+      - name: "Debug: list workspace (Unix)"
+        if: matrix.os != 'windows-latest'
         run: |
-          echo "PWD: $(pwd)" 
+          echo "PWD: $(pwd)"
           ls -la || true
           ls -la . || true
           ls -la files || true
+
+      - name: "Debug: list workspace (Windows)"
+        if: matrix.os == 'windows-latest'
+        shell: pwsh
+        run: |
+          Write-Output "PWD: $env:GITHUB_WORKSPACE"
+          Get-ChildItem -Path $env:GITHUB_WORKSPACE -Force | Select-Object -First 100
+          Get-ChildItem -Path (Join-Path $env:GITHUB_WORKSPACE 'files') -Force -ErrorAction SilentlyContinue | Select-Object -First 100
 
       - name: Cache Maven packages
         uses: actions/cache@v4
