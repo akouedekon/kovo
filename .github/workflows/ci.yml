@@ -42,14 +42,21 @@ jobs:
       - name: Run Maven tests (Unix)
         if: matrix.os != 'windows-latest'
         run: |
-          if [ -d "./files/kovo/backend" ]; then cd ./files/kovo/backend; elif [ -d "./backend" ]; then cd ./backend; else echo "Backend directory not found"; exit 1; fi
+          set -e
+          DIR=$(find "$GITHUB_WORKSPACE" -maxdepth 4 -type d -name backend | head -n 1 || true)
+          if [ -z "$DIR" ]; then echo "Backend directory not found under $GITHUB_WORKSPACE"; exit 1; fi
+          echo "Using backend dir: $DIR"
+          cd "$DIR"
           mvn -B test --fail-at-end
 
       - name: Run Maven tests (Windows)
         if: matrix.os == 'windows-latest'
         shell: pwsh
         run: |
-          if (Test-Path -Path "./files/kovo/backend") { Set-Location -Path "./files/kovo/backend" } elseif (Test-Path -Path "./backend") { Set-Location -Path "./backend" } else { Write-Error "Backend directory not found"; exit 1 }
+          $dir = Get-ChildItem -Path $env:GITHUB_WORKSPACE -Directory -Recurse -ErrorAction SilentlyContinue | Where-Object { $_.Name -eq 'backend' } | Select-Object -First 1
+          if(-not $dir){ Write-Error "Backend directory not found under $env:GITHUB_WORKSPACE" ; exit 1 }
+          Write-Output "Using backend dir: $($dir.FullName)"
+          Set-Location -Path $dir.FullName
           mvn -B test --fail-at-end
 
       - name: Upload surefire reports
@@ -91,17 +98,27 @@ jobs:
 
       - name: Flutter pub get
         run: |
-          if [ -d "./files/kovo/mobile" ]; then cd ./files/kovo/mobile; elif [ -d "./mobile" ]; then cd ./mobile; else echo "Mobile directory not found"; exit 1; fi
+          set -e
+          DIR=$(find "$GITHUB_WORKSPACE" -maxdepth 4 -type d -name mobile | head -n 1 || true)
+          if [ -z "$DIR" ]; then echo "Mobile directory not found under $GITHUB_WORKSPACE"; exit 1; fi
+          echo "Using mobile dir: $DIR"
+          cd "$DIR"
           flutter pub get
 
       - name: Run Flutter tests (if present)
         run: |
-          if [ -d "./files/kovo/mobile" ]; then cd ./files/kovo/mobile; elif [ -d "./mobile" ]; then cd ./mobile; else echo "Mobile directory not found"; exit 1; fi
+          set -e
+          DIR=$(find "$GITHUB_WORKSPACE" -maxdepth 4 -type d -name mobile | head -n 1 || true)
+          if [ -z "$DIR" ]; then echo "Mobile directory not found under $GITHUB_WORKSPACE"; exit 1; fi
+          cd "$DIR"
           flutter test --machine > flutter_test_output.json || true
 
       - name: Build APK (debug)
         run: |
-          if [ -d "./files/kovo/mobile" ]; then cd ./files/kovo/mobile; elif [ -d "./mobile" ]; then cd ./mobile; else echo "Mobile directory not found"; exit 1; fi
+          set -e
+          DIR=$(find "$GITHUB_WORKSPACE" -maxdepth 4 -type d -name mobile | head -n 1 || true)
+          if [ -z "$DIR" ]; then echo "Mobile directory not found under $GITHUB_WORKSPACE"; exit 1; fi
+          cd "$DIR"
           flutter build apk --debug
 
       - name: Upload flutter artifacts
@@ -144,12 +161,19 @@ jobs:
 
       - name: Install dependencies
         run: |
-          if [ -d "./files/kovo/admin" ]; then cd ./files/kovo/admin; elif [ -d "./admin" ]; then cd ./admin; else echo "Admin directory not found"; exit 1; fi
+          set -e
+          DIR=$(find "$GITHUB_WORKSPACE" -maxdepth 4 -type d -name admin | head -n 1 || true)
+          if [ -z "$DIR" ]; then echo "Admin directory not found under $GITHUB_WORKSPACE"; exit 1; fi
+          echo "Using admin dir: $DIR"
+          cd "$DIR"
           if [ -f package-lock.json ]; then npm ci; else npm install; fi
 
       - name: Build admin
         run: |
-          if [ -d "./files/kovo/admin" ]; then cd ./files/kovo/admin; elif [ -d "./admin" ]; then cd ./admin; else echo "Admin directory not found"; exit 1; fi
+          set -e
+          DIR=$(find "$GITHUB_WORKSPACE" -maxdepth 4 -type d -name admin | head -n 1 || true)
+          if [ -z "$DIR" ]; then echo "Admin directory not found under $GITHUB_WORKSPACE"; exit 1; fi
+          cd "$DIR"
           npm run build
 
       - name: Upload admin build
