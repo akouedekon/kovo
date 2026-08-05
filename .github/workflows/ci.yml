@@ -130,48 +130,52 @@ jobs:
           # Migrate to Android embedding v2 by regenerating with flutter create
           flutter create . --platforms android
 
-      - name: Fix Gradle build.gradle (remove deprecated module() API)
+      - name: Fix Gradle build.gradle (use Kotlin DSL to avoid Groovy issues)
         run: |
           set -e
           DIR=$(find "$GITHUB_WORKSPACE" -maxdepth 4 -type d -name mobile | head -n 1 || true)
           if [ -z "$DIR" ]; then echo "Mobile directory not found"; exit 0; fi
           cd "$DIR"
           
-          BUILD_FILE="android/build.gradle"
-          if [ -f "$BUILD_FILE" ]; then
-            echo "=== Original build.gradle (first 35 lines) ==="
-            head -35 "$BUILD_FILE" || true
+          # Remove old Groovy build.gradle
+          rm -f android/build.gradle
+          echo "Removed Groovy build.gradle"
+          
+          # Create Kotlin DSL build.gradle.kts (no Groovy compilation issues)
+          cat > android/build.gradle.kts << 'EOFKTS'
+buildscript {
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        classpath("com.android.tools.build:gradle:8.1.0")
+        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.0")
+    }
+}
+
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+
+val newBuildDir: Directory = rootDir.dir("../build")
+rootProject.layout.buildDirectory.value(newBuildDir)
+
+subprojects {
+    val newSubBuildDir: Directory = newBuildDir.dir(project.name)
+    project.layout.buildDirectory.value(newSubBuildDir)
+}
+
+tasks.register<Delete>("clean") {
+    delete(rootProject.layout.buildDirectory)
+}
+EOFKTS
             
-            # Create a minimal, clean build.gradle without module() API using printf
-            printf '%s\n' \
-              'buildscript {' \
-              '    ext.kotlin_version = "1.9.0"' \
-              '    repositories {' \
-              '        google()' \
-              '        mavenCentral()' \
-              '    }' \
-              '    dependencies {' \
-              '        classpath "com.android.tools.build:gradle:8.1.0"' \
-              '        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"' \
-              '    }' \
-              '}' \
-              'allprojects {' \
-              '    repositories {' \
-              '        google()' \
-              '        mavenCentral()' \
-              '    }' \
-              '}' \
-              'rootProject.buildDir = "../build"' \
-              'subprojects {' \
-              '    project.buildDir = "${rootProject.buildDir}/${project.name}"' \
-              '}' \
-              'task clean(type: Delete) {' \
-              '    delete rootProject.buildDir' \
-              '}' > "$BUILD_FILE"
-            
-            echo "Replaced build.gradle with clean version"
-            echo "=== New build.gradle ===" && cat "$BUILD_FILE"
-          fi
+          echo "Created build.gradle.kts (Kotlin DSL - no Groovy issues)"
+          echo "=== build.gradle.kts ===" && cat android/build.gradle.kts
 
       - name: Ensure Android minSdkVersion >= 20 (robust patch after create)
         run: |
