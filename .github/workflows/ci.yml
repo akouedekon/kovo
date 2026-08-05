@@ -317,6 +317,18 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
 
+      - name: Build backend JAR (needed for Docker image)
+        run: |
+          set -e
+          if [ -d backend ]; then
+            echo "Packaging backend with Maven (skip tests)"
+            cd backend
+            mvn -B package -DskipTests
+            cd -
+          else
+            echo "backend directory missing; cannot build JAR" && exit 1
+          fi
+
       - name: Build backend Docker image
         run: |
           docker build -f backend/Dockerfile -t kovo-backend:ci ./backend
