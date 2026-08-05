@@ -1,0 +1,20 @@
+server:
+  port: 8080
+spring:
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:kovo}
+    username: ${DB_USER:postgres}
+    password: ${DB_PASSWORD:postgres}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+kkiapay:
+  apiKey: YOUR_KKIAPAY_KEY_HERE
+sms:
+  provider: placeholder
+  apiKey: YOUR_SMS_PROVIDER_KEY
+jwt:
+  secret: "REPLACE_WITH_LONG_SECRET_AT_LEAST_32_CHARS_ChangeMe"
+  accessTokenSeconds: 900 # 15 minutes
+  refreshTokenDays: 30

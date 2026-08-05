@@ -1,0 +1,71 @@
+openapi: 3.0.1
+info:
+  title: Kovo API
+  version: 0.1.0
+servers:
+  - url: http://localhost:8080/api
+paths:
+  /auth/request-otp:
+    post:
+      summary: Demander OTP par SMS
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                phone:
+                  type: string
+      responses:
+        '200':
+          description: OTP envoyé
+  /auth/verify-otp:
+    post:
+      summary: Vérifier OTP et obtenir token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                phone:
+                  type: string
+                code:
+                  type: string
+      responses:
+        '200':
+          description: Token JWT
+  /rides:
+    get:
+      summary: Rechercher trajets disponibles
+      parameters:
+        - in: query
+          name: from
+          schema:
+            type: string
+        - in: query
+          name: to
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Liste de trajets
+    post:
+      summary: Créer un trajet (conducteur)
+      responses:
+        '201':
+          description: Trajet créé
+  /bookings:
+    post:
+      summary: Réserver un siège sur un trajet
+      responses:
+        '201':
+          description: Réservation créée
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
