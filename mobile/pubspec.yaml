@@ -2,17 +2,17 @@ name: kovo_mobile
 description: Kovo mobile app (Flutter)
 version: 0.1.0
 environment:
-  sdk: ">=2.12.0 <3.0.0"
+  sdk: ">=2.17.0 <3.0.0"
 dependencies:
   flutter:
     sdk: flutter
-  http: ^0.12.2
+  http: ^0.13.0
   flutter_map: ^2.0.0
   latlong: ^0.6.0
   shared_preferences: ^2.0.0
   provider: ^5.0.0
   url_launcher: ^6.0.0
-  webview_flutter: ^2.0.0
+  webview_flutter: ^3.0.0
 
 flutter:
   uses-material-design: true
