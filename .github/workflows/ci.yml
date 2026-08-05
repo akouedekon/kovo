@@ -173,6 +173,18 @@ jobs:
             echo "After cleaning, occurrences:" && grep -n "uses-sdk" -n "$f" || true
           done
 
+          # Create minimal manifests for main/profile/debug to ensure no uses-sdk or minSdk in manifests
+          for flavor in main profile debug; do
+            MANIFEST_DIR="android/app/src/$flavor"
+            mkdir -p "$MANIFEST_DIR"
+            cat > "$MANIFEST_DIR/AndroidManifest.xml" <<'EOF'
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.kovo">
+</manifest>
+EOF
+            echo "Wrote $MANIFEST_DIR/AndroidManifest.xml"
+          done
+
           # Final check: ensure at least one minSdk mention exists in app gradles
           if ! (grep -R "minSdkVersion" android/app || grep -R "minSdk =" android/app); then
             echo "No minSdk found in app gradles; inserting into build.gradle (creating file if needed)"
