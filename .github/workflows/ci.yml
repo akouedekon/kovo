@@ -197,6 +197,21 @@ jobs:
             echo "Inserted minSdkVersion 20"
           fi
 
+          # Ensure flutter.minSdkVersion is set to 20 in android/gradle.properties (this overrides flutter.minSdkVersion variable)
+          GRADLE_PROPS="android/gradle.properties"
+          if [ -f "$GRADLE_PROPS" ]; then
+            if grep -q "^flutter.minSdkVersion" "$GRADLE_PROPS"; then
+              sed -E -i.bak 's/^flutter.minSdkVersion\s*=.*/flutter.minSdkVersion=20/' "$GRADLE_PROPS" || true
+              echo "Replaced flutter.minSdkVersion in $GRADLE_PROPS"
+            else
+              echo "flutter.minSdkVersion=20" >> "$GRADLE_PROPS"
+              echo "Appended flutter.minSdkVersion=20 to $GRADLE_PROPS"
+            fi
+          else
+            echo "flutter.minSdkVersion=20" > "$GRADLE_PROPS"
+            echo "Created $GRADLE_PROPS with flutter.minSdkVersion=20"
+          fi
+
       - name: Run Flutter tests (if present)
         run: |
           set -e
