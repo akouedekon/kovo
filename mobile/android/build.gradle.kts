@@ -3,6 +3,11 @@ allprojects {
         google()
         mavenCentral()
     }
+    
+    // Add groovy-xml to fix "unable to resolve class groovy.xml.QName"
+    dependencies {
+        add("classpath", "org.codehaus.groovy:groovy-xml:3.0.21")
+    }
 }
 
 val newBuildDir: Directory =
