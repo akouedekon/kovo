@@ -128,7 +128,7 @@ jobs:
           cd "$DIR"
           flutter pub get
 
-      - name: Ensure Android minSdkVersion >= 20 (patch after create)
+      - name: Ensure Android minSdkVersion >= 20 (robust patch after create)
         run: |
           set -e
           DIR=$(find "$GITHUB_WORKSPACE" -maxdepth 4 -type d -name mobile | head -n 1 || true)
@@ -136,11 +136,15 @@ jobs:
           cd "$DIR"
           BUILD_FILE="android/app/build.gradle"
           if [ -f "$BUILD_FILE" ]; then
-            echo "Patching $BUILD_FILE -> minSdkVersion 20"
-            # replace patterns like: minSdkVersion 16  or minSdkVersion = 16
-            sed -E -i.bak 's/minSdkVersion[[:space:]]*=[[:space:]]*[0-9]+/minSdkVersion = 20/g' "$BUILD_FILE" || true
-            sed -E -i.bak 's/minSdkVersion[[:space:]]+[0-9]+/minSdkVersion 20/g' "$BUILD_FILE" || true
-            echo "Patched. Showing snippet:" && grep -n "minSdkVersion" -n "$BUILD_FILE" || true
+            echo "Patching $BUILD_FILE -> minSdkVersion 20 (perl-based)"
+            # If minSdkVersion exists, replace any numeric value with 20 (handles multiple syntaxes)
+            perl -0777 -pe "s/minSdkVersion\s*\(?\s*\d+\s*\)?/minSdkVersion 20/g" -i "$BUILD_FILE" || true
+            # If defaultConfig exists but no minSdkVersion line, insert it after defaultConfig{
+            if ! grep -q "minSdkVersion" "$BUILD_FILE"; then
+              echo "No minSdkVersion found after replacement, attempting to insert into defaultConfig"
+              perl -0777 -pe "s/(defaultConfig\s*\{)/\1\n        minSdkVersion 20/" -i "$BUILD_FILE" || true
+            fi
+            echo "Resulting minSdkVersion lines:" && grep -n "minSdkVersion" "$BUILD_FILE" || true
           else
             echo "$BUILD_FILE not found; skipping minSdk patch"
           fi
