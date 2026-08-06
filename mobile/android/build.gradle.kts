@@ -5,6 +5,10 @@ allprojects {
     }
 }
 
+tasks.register<Delete>("clean") {
+    delete(layout.buildDirectory)
+}
+
 val newBuildDir: Directory =
     rootProject.layout.buildDirectory
         .dir("../../build")
