@@ -73,6 +73,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: surefire-reports-${{ matrix.os }}
+          if-no-files-found: ignore
           path: |
             files/kovo/backend/target/surefire-reports/**
             backend/target/surefire-reports/**
@@ -82,6 +83,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: backend-logs-${{ matrix.os }}
+          if-no-files-found: ignore
           path: |
             files/kovo/backend/target/**/*.log
             backend/target/**/*.log
