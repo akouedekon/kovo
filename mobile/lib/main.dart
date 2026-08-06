@@ -134,13 +134,12 @@ class AppShell extends StatefulWidget {
 
 class _AppShellState extends State<AppShell> {
   int _index = 0;
-  final _scaffoldKey = GlobalKey<ScaffoldMessengerState>();
 
   late final List<Widget> _screens = [
     HomeTab(api: widget.api),
     SearchTab(api: widget.api),
-    TripsTab(api: widget.api),
-    MessagesTab(api: widget.api),
+    const TripsTab(),
+    const MessagesTab(),
     ProfileTab(api: widget.api),
   ];
 
@@ -316,7 +315,7 @@ class MessagesTab extends StatelessWidget {
 
 class ProfileTab extends StatefulWidget {
   final ApiClient api;
-  const ProfileTab({super.key});
+  const ProfileTab({super.key, required this.api});
 
   @override
   State<ProfileTab> createState() => _ProfileTabState();

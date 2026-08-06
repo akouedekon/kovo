@@ -15,7 +15,7 @@ dependencies:
   flutter_map: ^7.0.2
   latlong2: ^0.9.1
   url_launcher: ^6.3.0
-  webview_flutter: ^4.9.0
+  webview_flutter: ^4.7.0
 
 dev_dependencies:
   flutter_test:
