@@ -12,6 +12,7 @@ export default function App() {
     <div style={styles.page}>
       <aside style={styles.sidebar}>
         <h1 style={styles.brand}>Kovo Admin</h1>
+        <p style={styles.sidebarText}>Gestion des opérations, de la sécurité et des paiements</p>
         <nav style={styles.nav}>
           <a href="#dashboard">Dashboard</a>
           <a href="#users">Utilisateurs</a>
@@ -68,6 +69,12 @@ const styles: Record<string, React.CSSProperties> = {
     color: 'white',
     padding: 24,
   },
+  sidebarText: {
+    color: '#cbd5e1',
+    marginTop: -16,
+    marginBottom: 24,
+    lineHeight: 1.5,
+  },
   brand: {
     marginTop: 0,
     marginBottom: 32,
@@ -75,6 +82,13 @@ const styles: Record<string, React.CSSProperties> = {
   nav: {
     display: 'grid',
     gap: 12,
+  },
+  navLink: {
+    color: '#e2e8f0',
+    textDecoration: 'none',
+    padding: '10px 12px',
+    borderRadius: 12,
+    background: 'rgba(255,255,255,0.06)',
   },
   main: {
     padding: 28,

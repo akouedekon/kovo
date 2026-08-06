@@ -135,13 +135,19 @@ class AppShell extends StatefulWidget {
 class _AppShellState extends State<AppShell> {
   int _index = 0;
 
-  late final List<Widget> _screens = [
-    HomeTab(api: widget.api),
-    SearchTab(api: widget.api),
-    const TripsTab(),
-    const MessagesTab(),
-    ProfileTab(api: widget.api),
-  ];
+  late final List<Widget> _screens;
+
+  @override
+  void initState() {
+    super.initState();
+    _screens = [
+      HomeTab(api: widget.api),
+      SearchTab(api: widget.api),
+      const TripsTab(),
+      const MessagesTab(),
+      ProfileTab(api: widget.api),
+    ];
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -169,15 +175,20 @@ class HomeTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Kovo')),
+      appBar: AppBar(
+        title: const Text('Kovo'),
+        actions: [
+          IconButton(onPressed: () {}, icon: const Icon(Icons.notifications_none)),
+        ],
+      ),
       body: ListView(
         padding: const EdgeInsets.all(16),
-        children: const [
-          _HeroCard(),
+        children: [
+          const _HeroCard(),
           SizedBox(height: 16),
           _SectionTitle(title: 'Accès rapide'),
           SizedBox(height: 8),
-          _QuickGrid(),
+          const _QuickGrid(),
           SizedBox(height: 20),
           _SectionTitle(title: 'Recommandations'),
           SizedBox(height: 8),
@@ -223,6 +234,8 @@ class _SearchTabState extends State<SearchTab> {
           TextField(controller: toController, decoration: const InputDecoration(labelText: 'Destination', border: OutlineInputBorder())),
           const SizedBox(height: 12),
           FilledButton.icon(onPressed: _search, icon: const Icon(Icons.search), label: const Text('Rechercher')),
+          const SizedBox(height: 16),
+          Text('Filtre: trajets vérifiés, sièges disponibles, paiement sécurisé.', style: Theme.of(context).textTheme.bodySmall),
           const SizedBox(height: 20),
           const _SectionTitle(title: 'Résultats'),
           const SizedBox(height: 8),
@@ -352,6 +365,11 @@ class _ProfileTabState extends State<ProfileTab> {
           FilledButton.tonal(
             onPressed: _verifyOtp,
             child: const Text('Vérifier OTP'),
+          ),
+          const SizedBox(height: 12),
+          FilledButton(
+            onPressed: () {},
+            child: const Text('Voir mon wallet'),
           ),
           if (_message != null) ...[
             const SizedBox(height: 12),
