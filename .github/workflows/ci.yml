@@ -13,6 +13,9 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
+    defaults:
+      run:
+        shell: bash
     # avoid relying on checkout layout; try either files/kovo/backend or backend
     steps:
       - name: Checkout
@@ -91,6 +94,9 @@ jobs:
   mobile-tests:
     name: Mobile - Flutter tests & build
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -121,6 +127,9 @@ jobs:
   admin-build:
     name: Admin - Node build
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -178,6 +187,7 @@ jobs:
     defaults:
       run:
         working-directory: .
+        shell: bash
     steps:
       - name: Checkout
         uses: actions/checkout@v5
