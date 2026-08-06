@@ -1,6 +1,111 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 
 void main() => runApp(const KovoApp());
+
+class ApiConfig {
+  static const String baseUrl = String.fromEnvironment(
+    'KOVO_API_BASE_URL',
+    defaultValue: 'http://10.0.2.2:8080',
+  );
+}
+
+class ApiClient {
+  const ApiClient();
+
+  Uri _uri(String path, [Map<String, String>? queryParameters]) {
+    return Uri.parse('${ApiConfig.baseUrl}$path').replace(queryParameters: queryParameters);
+  }
+
+  Future<List<RideItem>> searchRides({String? from, String? to}) async {
+    final response = await http.get(
+      _uri('/api/rides', {
+        if (from != null && from.isNotEmpty) 'from': from,
+        if (to != null && to.isNotEmpty) 'to': to,
+      }),
+    );
+    if (response.statusCode != 200) {
+      throw Exception('Failed to load rides');
+    }
+    final data = jsonDecode(response.body) as List<dynamic>;
+    return data.map((e) => RideItem.fromJson(e as Map<String, dynamic>)).toList();
+  }
+
+  Future<Map<String, dynamic>> requestOtp(String email) async {
+    final response = await http.post(
+      _uri('/api/auth/request-otp'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'email': email}),
+    );
+    return jsonDecode(response.body) as Map<String, dynamic>;
+  }
+
+  Future<Map<String, dynamic>> verifyOtp(String email, String code) async {
+    final response = await http.post(
+      _uri('/api/auth/verify-otp'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'email': email, 'code': code}),
+    );
+    return jsonDecode(response.body) as Map<String, dynamic>;
+  }
+
+  Future<Map<String, dynamic>> createBooking({
+    required int rideId,
+    required int passengerId,
+    required int seatsBooked,
+  }) async {
+    final response = await http.post(
+      _uri('/api/bookings'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'rideId': rideId,
+        'passengerId': passengerId,
+        'seatsBooked': seatsBooked,
+      }),
+    );
+    return jsonDecode(response.body) as Map<String, dynamic>;
+  }
+
+  Future<Map<String, dynamic>> createPayment({
+    required int bookingId,
+    required int amount,
+  }) async {
+    final response = await http.post(
+      _uri('/api/payments/create'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'bookingId': bookingId, 'amount': amount}),
+    );
+    return jsonDecode(response.body) as Map<String, dynamic>;
+  }
+}
+
+class RideItem {
+  final int? id;
+  final String origin;
+  final String destination;
+  final String departureTime;
+  final int seatsAvailable;
+
+  RideItem({
+    required this.id,
+    required this.origin,
+    required this.destination,
+    required this.departureTime,
+    required this.seatsAvailable,
+  });
+
+  factory RideItem.fromJson(Map<String, dynamic> json) {
+    return RideItem(
+      id: json['id'] as int?,
+      origin: (json['origin'] ?? '') as String,
+      destination: (json['destination'] ?? '') as String,
+      departureTime: (json['departureTime'] ?? '') as String,
+      seatsAvailable: (json['seatsAvailable'] ?? 0) as int,
+    );
+  }
+}
 
 class KovoApp extends StatelessWidget {
   const KovoApp({super.key});
@@ -14,13 +119,14 @@ class KovoApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF2E7D32)),
         useMaterial3: true,
       ),
-      home: const AppShell(),
+      home: const AppShell(api: ApiClient()),
     );
   }
 }
 
 class AppShell extends StatefulWidget {
-  const AppShell({super.key});
+  final ApiClient api;
+  const AppShell({super.key, required this.api});
 
   @override
   State<AppShell> createState() => _AppShellState();
@@ -28,13 +134,14 @@ class AppShell extends StatefulWidget {
 
 class _AppShellState extends State<AppShell> {
   int _index = 0;
+  final _scaffoldKey = GlobalKey<ScaffoldMessengerState>();
 
-  final _screens = const [
-    HomeTab(),
-    SearchTab(),
-    TripsTab(),
-    MessagesTab(),
-    ProfileTab(),
+  late final List<Widget> _screens = [
+    HomeTab(api: widget.api),
+    SearchTab(api: widget.api),
+    TripsTab(api: widget.api),
+    MessagesTab(api: widget.api),
+    ProfileTab(api: widget.api),
   ];
 
   @override
@@ -57,63 +164,53 @@ class _AppShellState extends State<AppShell> {
 }
 
 class HomeTab extends StatelessWidget {
-  const HomeTab({super.key});
+  final ApiClient api;
+  const HomeTab({super.key, required this.api});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Kovo'),
-        actions: [
-          IconButton(onPressed: () {}, icon: const Icon(Icons.notifications_none)),
-        ],
-      ),
+      appBar: AppBar(title: const Text('Kovo')),
       body: ListView(
         padding: const EdgeInsets.all(16),
-        children: [
+        children: const [
           _HeroCard(),
-          const SizedBox(height: 16),
-          const _SectionTitle(title: 'Accès rapide'),
-          const SizedBox(height: 8),
-          GridView.count(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            crossAxisCount: 2,
-            mainAxisSpacing: 12,
-            crossAxisSpacing: 12,
-            childAspectRatio: 1.2,
-            children: const [
-              _QuickAction(icon: Icons.my_location, title: 'Où aller ?', subtitle: 'Trouver un trajet'),
-              _QuickAction(icon: Icons.add_circle_outline, title: 'Publier', subtitle: 'Créer un trajet'),
-              _QuickAction(icon: Icons.payments_outlined, title: 'Paiement', subtitle: 'Wallet et coupons'),
-              _QuickAction(icon: Icons.support_agent, title: 'Assistance', subtitle: 'Aide 24/7'),
-            ],
-          ),
-          const SizedBox(height: 20),
-          const _SectionTitle(title: 'Recommandations'),
-          const SizedBox(height: 8),
-          const _TripCard(
-            from: 'Cotonou',
-            to: 'Abomey-Calavi',
-            time: '08:30',
-            price: '1 500 FCFA',
-            seats: '3 places',
-          ),
-          const _TripCard(
-            from: 'Porto-Novo',
-            to: 'Cotonou',
-            time: '17:10',
-            price: '2 000 FCFA',
-            seats: '2 places',
-          ),
+          SizedBox(height: 16),
+          _SectionTitle(title: 'Accès rapide'),
+          SizedBox(height: 8),
+          _QuickGrid(),
+          SizedBox(height: 20),
+          _SectionTitle(title: 'Recommandations'),
+          SizedBox(height: 8),
+          _TripCard(from: 'Cotonou', to: 'Abomey-Calavi', time: '08:30', price: '1 500 FCFA', seats: '3 places'),
+          _TripCard(from: 'Porto-Novo', to: 'Cotonou', time: '17:10', price: '2 000 FCFA', seats: '2 places'),
         ],
       ),
     );
   }
 }
 
-class SearchTab extends StatelessWidget {
-  const SearchTab({super.key});
+class SearchTab extends StatefulWidget {
+  final ApiClient api;
+  const SearchTab({super.key, required this.api});
+
+  @override
+  State<SearchTab> createState() => _SearchTabState();
+}
+
+class _SearchTabState extends State<SearchTab> {
+  final fromController = TextEditingController();
+  final toController = TextEditingController();
+  late Future<List<RideItem>> ridesFuture = widget.api.searchRides();
+
+  void _search() {
+    setState(() {
+      ridesFuture = widget.api.searchRides(
+        from: fromController.text.trim(),
+        to: toController.text.trim(),
+      );
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -122,41 +219,59 @@ class SearchTab extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          const _SearchField(label: 'Départ', hint: 'Ville, quartier, point de rendez-vous'),
+          TextField(controller: fromController, decoration: const InputDecoration(labelText: 'Départ', border: OutlineInputBorder())),
           const SizedBox(height: 12),
-          const _SearchField(label: 'Destination', hint: 'Où veux-tu aller ?'),
+          TextField(controller: toController, decoration: const InputDecoration(labelText: 'Destination', border: OutlineInputBorder())),
           const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: FilledButton.icon(
-                  onPressed: () {},
-                  icon: const Icon(Icons.search),
-                  label: const Text('Rechercher'),
-                ),
-              ),
-            ],
-          ),
+          FilledButton.icon(onPressed: _search, icon: const Icon(Icons.search), label: const Text('Rechercher')),
           const SizedBox(height: 20),
           const _SectionTitle(title: 'Résultats'),
           const SizedBox(height: 8),
-          const _TripCard(
-            from: 'Cotonou',
-            to: 'Parakou',
-            time: '06:45',
-            price: '7 000 FCFA',
-            seats: '4 places',
-          ),
-          const _TripCard(
-            from: 'Abomey-Calavi',
-            to: 'Sèmè-Kpodji',
-            time: '18:15',
-            price: '1 200 FCFA',
-            seats: '3 places',
+          FutureBuilder<List<RideItem>>(
+            future: ridesFuture,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Padding(
+                  padding: EdgeInsets.all(24),
+                  child: Center(child: CircularProgressIndicator()),
+                );
+              }
+              if (snapshot.hasError) {
+                return Text('Impossible de charger les trajets: ${snapshot.error}');
+              }
+              final rides = snapshot.data ?? [];
+              if (rides.isEmpty) {
+                return const Text('Aucun trajet trouvé.');
+              }
+              return Column(
+                children: rides
+                    .map(
+                      (ride) => Card(
+                        child: ListTile(
+                          leading: const CircleAvatar(child: Icon(Icons.directions_car)),
+                          title: Text('${ride.origin} → ${ride.destination}'),
+                          subtitle: Text('${ride.departureTime} • ${ride.seatsAvailable} places'),
+                          trailing: TextButton(
+                            onPressed: () => _book(context, ride),
+                            child: const Text('Réserver'),
+                          ),
+                        ),
+                      ),
+                    )
+                    .toList(),
+              );
+            },
           ),
         ],
       ),
     );
+  }
+
+  Future<void> _book(BuildContext context, RideItem ride) async {
+    if (ride.id == null) return;
+    final result = await widget.api.createBooking(rideId: ride.id!, passengerId: 1, seatsBooked: 1);
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Réservation créée: ${result['bookingId']}')));
   }
 }
 
@@ -174,11 +289,6 @@ class TripsTab extends StatelessWidget {
           SizedBox(height: 8),
           _TripCard(from: 'Réservé: Cotonou', to: 'Abomey-Calavi', time: 'Aujourd’hui', price: 'Payé', seats: '2 passagers'),
           _TripCard(from: 'Terminé: Porto-Novo', to: 'Cotonou', time: 'Hier', price: '2 000 FCFA', seats: '1 passager'),
-          SizedBox(height: 20),
-          _SectionTitle(title: 'Historique'),
-          SizedBox(height: 8),
-          _InfoTile(icon: Icons.check_circle, title: 'Trajet confirmé', subtitle: 'Départ 08:30, arrivée 09:10'),
-          _InfoTile(icon: Icons.star_outline, title: 'Note du conducteur', subtitle: '4.8/5 sur 132 courses'),
         ],
       ),
     );
@@ -204,8 +314,19 @@ class MessagesTab extends StatelessWidget {
   }
 }
 
-class ProfileTab extends StatelessWidget {
+class ProfileTab extends StatefulWidget {
+  final ApiClient api;
   const ProfileTab({super.key});
+
+  @override
+  State<ProfileTab> createState() => _ProfileTabState();
+}
+
+class _ProfileTabState extends State<ProfileTab> {
+  final emailController = TextEditingController(text: 'demo@kovo.app');
+  final otpController = TextEditingController();
+  String? _message;
+  Map<String, dynamic>? _tokens;
 
   @override
   Widget build(BuildContext context) {
@@ -213,24 +334,62 @@ class ProfileTab extends StatelessWidget {
       appBar: AppBar(title: const Text('Profil')),
       body: ListView(
         padding: const EdgeInsets.all(16),
-        children: const [
-          CircleAvatar(radius: 34, child: Icon(Icons.person, size: 34)),
-          SizedBox(height: 12),
-          Text('Utilisateur Kovo', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-          SizedBox(height: 4),
-          Text('Compte vérifié • Bénin'),
-          SizedBox(height: 20),
-          _ProfileAction(icon: Icons.payment_outlined, title: 'Portefeuille'),
-          _ProfileAction(icon: Icons.history, title: 'Historique'),
-          _ProfileAction(icon: Icons.security, title: 'Sécurité'),
-          _ProfileAction(icon: Icons.settings_outlined, title: 'Paramètres'),
+        children: [
+          const CircleAvatar(radius: 34, child: Icon(Icons.person, size: 34)),
+          const SizedBox(height: 12),
+          const Text('Utilisateur Kovo', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 4),
+          const Text('Compte vérifié • Bénin'),
+          const SizedBox(height: 20),
+          TextField(controller: emailController, decoration: const InputDecoration(labelText: 'Email', border: OutlineInputBorder())),
+          const SizedBox(height: 12),
+          FilledButton(
+            onPressed: _requestOtp,
+            child: const Text('Demander OTP'),
+          ),
+          const SizedBox(height: 12),
+          TextField(controller: otpController, decoration: const InputDecoration(labelText: 'OTP', border: OutlineInputBorder())),
+          const SizedBox(height: 12),
+          FilledButton.tonal(
+            onPressed: _verifyOtp,
+            child: const Text('Vérifier OTP'),
+          ),
+          if (_message != null) ...[
+            const SizedBox(height: 12),
+            Text(_message!),
+          ],
+          if (_tokens != null) ...[
+            const SizedBox(height: 12),
+            Text('Access: ${_tokens!['accessToken'] ?? ''}'),
+            Text('Refresh: ${_tokens!['refreshToken'] ?? ''}'),
+          ],
+          const SizedBox(height: 20),
+          const _ProfileAction(icon: Icons.payment_outlined, title: 'Portefeuille'),
+          const _ProfileAction(icon: Icons.history, title: 'Historique'),
+          const _ProfileAction(icon: Icons.security, title: 'Sécurité'),
+          const _ProfileAction(icon: Icons.settings_outlined, title: 'Paramètres'),
         ],
       ),
     );
   }
+
+  Future<void> _requestOtp() async {
+    final result = await widget.api.requestOtp(emailController.text.trim());
+    setState(() => _message = 'OTP demandé: ${result['status'] ?? result}');
+  }
+
+  Future<void> _verifyOtp() async {
+    final result = await widget.api.verifyOtp(emailController.text.trim(), otpController.text.trim());
+    setState(() {
+      _tokens = result;
+      _message = 'Connexion réussie';
+    });
+  }
 }
 
 class _HeroCard extends StatelessWidget {
+  const _HeroCard();
+
   @override
   Widget build(BuildContext context) {
     return Card(
@@ -247,6 +406,28 @@ class _HeroCard extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _QuickGrid extends StatelessWidget {
+  const _QuickGrid();
+
+  @override
+  Widget build(BuildContext context) {
+    return GridView.count(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      crossAxisCount: 2,
+      mainAxisSpacing: 12,
+      crossAxisSpacing: 12,
+      childAspectRatio: 1.2,
+      children: const [
+        _QuickAction(icon: Icons.my_location, title: 'Où aller ?', subtitle: 'Trouver un trajet'),
+        _QuickAction(icon: Icons.add_circle_outline, title: 'Publier', subtitle: 'Créer un trajet'),
+        _QuickAction(icon: Icons.payments_outlined, title: 'Paiement', subtitle: 'Wallet et coupons'),
+        _QuickAction(icon: Icons.support_agent, title: 'Assistance', subtitle: 'Aide 24/7'),
+      ],
     );
   }
 }
@@ -300,23 +481,6 @@ class _TripCard extends StatelessWidget {
   }
 }
 
-class _SearchField extends StatelessWidget {
-  final String label;
-  final String hint;
-  const _SearchField({required this.label, required this.hint});
-
-  @override
-  Widget build(BuildContext context) {
-    return TextField(
-      decoration: InputDecoration(
-        labelText: label,
-        hintText: hint,
-        border: const OutlineInputBorder(),
-      ),
-    );
-  }
-}
-
 class _SectionTitle extends StatelessWidget {
   final String title;
   const _SectionTitle({required this.title});
@@ -324,18 +488,6 @@ class _SectionTitle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Text(title, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold));
-  }
-}
-
-class _InfoTile extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  const _InfoTile({required this.icon, required this.title, required this.subtitle});
-
-  @override
-  Widget build(BuildContext context) {
-    return ListTile(leading: Icon(icon), title: Text(title), subtitle: Text(subtitle));
   }
 }
 
