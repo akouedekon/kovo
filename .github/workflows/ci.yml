@@ -109,8 +109,7 @@ jobs:
       - name: Build mobile APK
         run: |
           set -e
-          DIR=$(find "$GITHUB_WORKSPACE" -maxdepth 4 -type d -name mobile | head -n 1)
-          cd "$DIR"
+          cd "$GITHUB_WORKSPACE/files/kovo/mobile"
           flutter pub get
           flutter build apk --debug
           echo "APK build succeeded!"
